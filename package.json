@@ -1,0 +1,9 @@
+{
+  "name": "handa-hp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI소상공인 HP시안 - AI 홈페이지 시안 생성 프로젝트",
+  "scripts": {
+    "dev": "echo \"실제 프레임워크(Next.js 등) 설치 후 스크립트를 채워주세요\""
+  }
+}
