@@ -109,7 +109,7 @@
 
 | 데이터 | 설명 |
 |--------|------|
-| Google 로그인 사용자 식별자(uid) / 이메일 | 계정 인증용 (테스트 버전은 로그인·저장 모두 더미 처리, 실제 Supabase Auth+Google OAuth 연동은 이후 단계) |
+| Google 로그인 사용자 식별자(uid) / 이메일 | 계정 인증용 (Supabase Auth + Google OAuth 연동) |
 | 입력 정보 | 업종, 매장명, 소개, 스타일, 기능 선택, 색상 테마 |
 | 업로드 이미지 | 매장 사진 파일 (스토리지 저장) |
 | 생성된 시안 HTML | AI가 만든 시안 코드 |
@@ -135,12 +135,10 @@
 - 모바일 앱 (iOS/Android 네이티브)
 - 시안 편집기 (드래그앤드롭 빌더)
 - SNS 콘텐츠 자동 생성
-- database를 사용하지 않는다
-- vercel에 배포하지 않는다
 
 ## 이번에 구현할 것
-- 더미데이터를 사용할것
--로컬에서만 실행하게 할 것
+- 로컬에서 기능을 검증한 뒤 Vercel에 배포한다
+- Supabase(Auth, Database)를 실제로 연동한다
 
 
 ---
@@ -154,3 +152,15 @@
 - [ ] 관리자 페이지에서 사용자 목록과 로그를 확인할 수 있다
 - [ ] 필수 입력값 누락 시 제출이 막히고 안내 메시지가 표시된다
 
+
+## 환경변수
+
+이 프로젝트에는 다음 환경변수가 필요하다.
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+  - Supabase 프로젝트 주소
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+  - 브라우저에서 사용하는 Supabase 공개 키
+
+실제 값은 `.env.local`과 Vercel Environment Variables에 저장한다.
+MD 파일과 GitHub에는 실제 값을 기록하지 않는다.

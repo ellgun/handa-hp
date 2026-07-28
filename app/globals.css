@@ -90,6 +90,34 @@ body {
   cursor: pointer;
 }
 
+.user-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-size: 15px;
+  color: var(--text);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 main {
   max-width: 720px;
   margin: 0 auto;
@@ -263,7 +291,7 @@ button.btn-google:hover {
 .dummy-note,
 .privacy-note {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .error-box {
@@ -457,7 +485,7 @@ td {
   background: var(--surface);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-pill);
-  padding: 14px 20px;
+  padding: 16px 20px;
   margin-bottom: 14px;
   text-align: left;
 }
@@ -489,7 +517,7 @@ td {
 
 .forgot-row span {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .login-submit-row {
@@ -521,13 +549,13 @@ td {
 
 .login-divider {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   margin: 20px 0;
 }
 
 .signup-row {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 16px;
 }
 

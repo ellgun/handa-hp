@@ -28,11 +28,19 @@ export default async function RootLayout({ children }) {
           <Link href="/" className="logo">
             handa<span className="logo-dot">.</span>뚝딱
           </Link>
-          <nav>
+          <nav className="user-nav">
             {session ? (
-              <form action="/api/auth/logout" method="post" style={{ display: "inline" }}>
-                <button type="submit">로그아웃</button>
-              </form>
+              <>
+                <span className="user-info">
+                  {session.avatarUrl && (
+                    <img src={session.avatarUrl} alt="" className="user-avatar" />
+                  )}
+                  <span className="user-name">{session.name || session.email}</span>
+                </span>
+                <form action="/api/auth/logout" method="post" style={{ display: "inline" }}>
+                  <button type="submit">로그아웃</button>
+                </form>
+              </>
             ) : (
               <Link href="/login">로그인</Link>
             )}

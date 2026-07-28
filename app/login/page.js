@@ -66,8 +66,7 @@ export default async function LoginPage() {
 
         <p className="login-divider">또는</p>
 
-        <form action="/api/auth/login" method="post">
-          <input type="hidden" name="role" value="user" />
+        <form action="/api/auth/google" method="post">
           <button type="submit" className="btn-google">
             <GoogleIcon />
             구글 계정으로 로그인
