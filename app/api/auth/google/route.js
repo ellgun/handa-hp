@@ -11,6 +11,8 @@ export async function POST(request) {
     provider: "google",
     options: {
       redirectTo: `${origin}/auth/callback`,
+      // 브라우저에 이미 로그인된 Google 세션이 있어도 매번 계정 선택 화면을 띄운다.
+      queryParams: { prompt: "select_account" },
     },
   });
 
