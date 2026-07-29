@@ -21,7 +21,7 @@ export default function ResendButton({ draftId }) {
         throw new Error(data.error || "재발송에 실패했습니다.");
       }
       setFailed(false);
-      setMessage("재발송에 성공했습니다. (더미 발송)");
+      setMessage("재발송에 성공했습니다.");
     } catch (err) {
       setFailed(true);
       setMessage(err.message);

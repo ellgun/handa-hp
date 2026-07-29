@@ -23,7 +23,7 @@ export default function ResultView({ draft }) {
         throw new Error(data.error || "이메일 발송에 실패했습니다.");
       }
       setStatus("sent");
-      setMessage("이메일 발송에 성공했습니다. (더미 발송)");
+      setMessage("이메일 발송에 성공했습니다.");
     } catch (err) {
       setStatus("failed");
       setMessage(err.message);

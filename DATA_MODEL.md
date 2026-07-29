@@ -89,7 +89,7 @@
 
 ## 4. email_delivery_logs
 
-목적: Gmail 발송(Agentria API) 결과만 저장
+목적: Gmail 발송(Resend API) 결과만 저장
 
 필드:
 
@@ -97,8 +97,8 @@
 - user_id: uuid, profiles.id 참조
 - draft_id: uuid, drafts.id 참조
 - status: text, 허용값 requested / sent / failed
-- http_status: integer, nullable (Agentria HTTP 응답 코드)
-- provider_request_id: text, nullable (Agentria 요청/메시지 ID)
+- http_status: integer, nullable (Resend HTTP 응답 코드)
+- provider_request_id: text, nullable (Resend 메시지 ID)
 - error_code: varchar(100), nullable
 - created_at: timestamptz
 
@@ -107,7 +107,7 @@
 - 이메일 제목(subject)
 - 이메일 본문(body)
 - API key
-- Agentria 전체 응답 원문
+- Resend 전체 응답 원문
 
 ---
 

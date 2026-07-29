@@ -162,14 +162,33 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 
 ---
 
-## API 6: Gmail 발송 (Agentria API) — 이메일 발송
+## API 6: Gmail 발송 (Resend API) — 이메일 발송
 
-- Gmail 발송은 Agentria에서 만든 Gmail 어빌리티 API를 통해 요청한다 (claude.md 9조 기준)
-- 앱 내부 서버 Route가 Agentria API를 호출하며, 브라우저에서 Agentria 비밀키를 직접 호출하지 않는다
-- 요청 주소·인증 헤더·Body 형식: **아직 확인되지 않음** — Agentria 공식 문서 또는 Postman 테스트로 성공 사례를 확인한 뒤 이 항목에 기재한다 (추측 기재 금지)
-- 이메일 발송 로그에는 본문 전체가 아닌 다음만 저장: user_id, 관련 데이터 ID, 발송 상태, HTTP 상태 코드, Agentria 요청/메시지 ID(있는 경우), 짧은 오류 코드, 발송 시각
+- **claude.md 9조는 Agentria 사용을 명시하지만, Agentria의 실제 API 스펙(주소·인증·Body 형식)이 공개 문서/사내 문서 어디에도 확인되지 않아 사용자 지시로 보류했다.** 대신 공식 문서가 확인된 Resend REST API를 직접 사용한다.
+- 참고 문서: https://resend.com/docs/api-reference/emails/send-email
+- 요청 주소: `https://api.resend.com/emails`
+- 방식: POST
+- 헤더:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer ${RESEND_API_KEY}`
+- Body:
+```json
+{
+  "from": "handa.뚝딱 <onboarding@resend.dev>",
+  "to": ["user@example.com"],
+  "subject": "{업체명} 홈페이지 시안이 완성됐어요",
+  "html": "<div>...시안 링크 포함된 HTML...</div>"
+}
+```
+- 성공 응답 예시:
+```json
+{ "id": "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" }
+```
+- 발신 주소는 도메인 인증 전까지 Resend 기본 테스트 주소(`onboarding@resend.dev`)를 사용한다. 실제 도메인 인증 후 발신 주소만 교체하면 된다.
+- 앱 내부 서버 Route(`/api/email`)가 Resend를 호출하며, 브라우저에서 API 키를 직접 호출하지 않는다.
+- 이메일 발송 로그에는 본문 전체가 아닌 다음만 저장: user_id, 관련 데이터 ID, 발송 상태, HTTP 상태 코드, Resend 메시지 ID(`id`, 있는 경우), 짧은 오류 코드, 발송 시각
 - 화면에 표시할 데이터 위치: 05_Result 이메일 발송 성공/실패 안내 메시지
-- 환경변수명: 확인 후 기재 (가칭 `AGENTRIA_API_KEY` — 실제 명칭은 Agentria 문서 확인 필요)
+- 환경변수명: `RESEND_API_KEY`
 
 ---
 
@@ -186,8 +205,8 @@ GEMINI_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
-# Gmail 발송 (Agentria API) — 변수명 확인 후 확정
-AGENTRIA_API_KEY=
+# Gmail 발송 (Resend API)
+RESEND_API_KEY=
 
 # 앱 설정
 NEXT_PUBLIC_APP_URL=

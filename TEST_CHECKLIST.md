@@ -59,7 +59,7 @@
 
 - [ ] 생성된 홈페이지 시안이 미리보기로 표시됨
 - [ ] 운영 제안 문구 카드 표시
-- [ ] "이메일로 받기" 버튼 클릭 시 Gmail(Agentria API) 실제 발송 요청
+- [ ] "이메일로 받기" 버튼 클릭 시 Gmail(Resend API) 실제 발송 요청
 - [ ] 이메일 발송 성공 안내 메시지 표시
 - [ ] 이메일 발송 실패 시 안내 메시지 + 재시도 버튼 표시
 - [ ] 발송 실패 후에도 시안이 마이페이지에 보존됨
@@ -116,9 +116,9 @@
 
 ---
 
-## Gmail 발송 (Agentria API)
+## Gmail 발송 (Resend API)
 
-- [ ] Agentria API 키가 환경변수로만 관리됨
+- [ ] Resend API 키가 환경변수로만 관리됨
 - [ ] 발송 성공 시 email_delivery_logs.status = 'sent'
 - [ ] 발송 실패 시 email_delivery_logs.status = 'failed' + error_code 저장
 - [ ] 이메일 본문·제목이 DB에 저장되지 않음
