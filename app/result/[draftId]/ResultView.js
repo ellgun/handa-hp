@@ -32,13 +32,19 @@ export default function ResultView({ draft }) {
     }
   }
 
+  const previewUrl = `/result/${draft.id}/preview`;
+
   return (
     <>
       <iframe
         className="iframe-preview"
         title="홈페이지 시안 미리보기"
-        srcDoc={draft.html_content}
+        src={previewUrl}
+        sandbox=""
       />
+      <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="preview-link">
+        새 창에서 시안 보기
+      </a>
 
       <div className="suggestion-card">
         <h2>운영 제안</h2>

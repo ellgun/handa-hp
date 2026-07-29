@@ -152,9 +152,9 @@ export default function AdminTabs({ summary, profiles, activityLogs, emailLogs, 
           ) : (
             drafts.map((d) => (
               <div className="draft-card" key={d.id}>
-                <strong>{d.region_industry}</strong>
+                <strong>{d.store_name || d.region_industry}</strong>
                 <p className="dummy-note">
-                  {d.user_email} · {formatDate(d.created_at)}
+                  {d.region_industry} · {d.user_email} · {formatDate(d.created_at)}
                 </p>
                 <span className={`status-pill ${d.email_sent ? "success" : "inactive"}`}>
                   {d.email_sent ? "발송 완료" : "미발송"}

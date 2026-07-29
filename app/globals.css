@@ -288,6 +288,20 @@ button.btn-google:hover {
   margin-top: 24px;
 }
 
+.step-nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.step-nav-row button {
+  flex: 1;
+}
+
+.step-nav-row .submit-fixed {
+  margin-top: 0;
+}
+
 .dummy-note,
 .privacy-note {
   color: var(--muted);
@@ -367,6 +381,15 @@ td {
   height: 480px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+}
+
+.preview-link {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  color: var(--brand);
+  font-size: 14px;
 }
 
 .suggestion-card {
@@ -594,6 +617,32 @@ td {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  margin-top: 12px;
+}
+
+.photo-preview li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 96px;
+}
+
+.photo-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
 }
 
 /* 하단 탭 내비게이션 */

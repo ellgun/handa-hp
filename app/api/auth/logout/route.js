@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSession, clearSession } from "../../../../lib/dummyAuth";
-import { addActivityLog } from "../../../../lib/dummyStore";
+import { addActivityLog } from "../../../../lib/dataStore";
 
 export async function POST(request) {
   const session = await getSession();
   if (session) {
-    addActivityLog({
+    await addActivityLog({
       user_id: session.uid,
       event_type: "logout",
       page_path: null,

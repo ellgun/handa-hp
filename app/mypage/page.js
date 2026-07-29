@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "../../lib/dummyAuth";
-import { getProfileById, getDraftsByUser } from "../../lib/dummyStore";
+import { getProfileById, getDraftsByUser } from "../../lib/dataStore";
 import ResendButton from "./ResendButton";
 
 export default async function MyPage() {
@@ -10,8 +10,10 @@ export default async function MyPage() {
     redirect("/login");
   }
 
-  const profile = getProfileById(session.uid);
-  const drafts = getDraftsByUser(session.uid);
+  const [profile, drafts] = await Promise.all([
+    getProfileById(session.uid),
+    getDraftsByUser(session.uid),
+  ]);
 
   return (
     <section className="page mypage">
@@ -24,7 +26,9 @@ export default async function MyPage() {
         drafts.map((draft) => (
           <div className="draft-card" key={draft.id}>
             <p>
-              <strong>{draft.region_industry}</strong>
+              <strong>{draft.store_name || draft.region_industry}</strong>
+              <br />
+              {draft.region_industry}
               <br />
               생성일시: {new Date(draft.created_at).toLocaleString("ko-KR")}
               <br />

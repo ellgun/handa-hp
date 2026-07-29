@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "../../../lib/supabaseServer";
-import { ensureProfile, addActivityLog } from "../../../lib/dummyStore";
+import { ensureProfile, addActivityLog } from "../../../lib/dataStore";
 
 // Google 로그인 완료 후 Supabase가 돌아오는 콜백 주소.
 export async function GET(request) {
@@ -11,8 +11,8 @@ export async function GET(request) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
-      ensureProfile(data.user.id, data.user.email);
-      addActivityLog({
+      await ensureProfile(data.user.id, data.user.email);
+      await addActivityLog({
         user_id: data.user.id,
         event_type: "login",
         page_path: "/login",

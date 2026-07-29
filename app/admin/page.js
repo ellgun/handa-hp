@@ -8,7 +8,7 @@ import {
   getAllDraftsWithUser,
   getAdminSummary,
   addActivityLog,
-} from "../../lib/dummyStore";
+} from "../../lib/dataStore";
 import AdminTabs from "./AdminTabs";
 
 export default async function AdminPage() {
@@ -17,23 +17,25 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const profile = getProfileById(session.uid);
+  const profile = await getProfileById(session.uid);
   if (!profile || profile.role !== "admin") {
     redirect("/");
   }
 
-  addActivityLog({
+  await addActivityLog({
     user_id: session.uid,
     event_type: "admin_view",
     page_path: "/admin",
     status: "success",
   });
 
-  const summary = getAdminSummary();
-  const profiles = getAllProfilesWithStats();
-  const activityLogs = getAllActivityLogs();
-  const emailLogs = getAllEmailLogs();
-  const drafts = getAllDraftsWithUser();
+  const [summary, profiles, activityLogs, emailLogs, drafts] = await Promise.all([
+    getAdminSummary(),
+    getAllProfilesWithStats(),
+    getAllActivityLogs(),
+    getAllEmailLogs(),
+    getAllDraftsWithUser(),
+  ]);
 
   return (
     <section className="page admin-page">

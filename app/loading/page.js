@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const STEPS = [
@@ -16,6 +16,9 @@ export default function LoadingPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState(null);
   const [attempt, setAttempt] = useState(0);
+  // React 개발 모드는 effect를 두 번 실행해서, 가드가 없으면 같은 attempt에 대해
+  // /api/generate가 두 번 호출된다 (Gemini 요청도 그만큼 배로 나가 429를 유발할 수 있다).
+  const startedForAttempt = useRef(-1);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,7 +34,11 @@ export default function LoadingPage() {
       return;
     }
 
-    let cancelled = false;
+    if (startedForAttempt.current === attempt) {
+      return;
+    }
+    startedForAttempt.current = attempt;
+
     setError(null);
 
     let input;
@@ -42,6 +49,12 @@ export default function LoadingPage() {
       return;
     }
 
+    // cleanup에서 취소 플래그를 세우지 않는다 — 개발 모드 StrictMode가 이 effect를
+    // (마운트→클린업→재마운트) 순서로 두 번 실행하는데, 위 가드 덕분에 fetch 자체는
+    // 첫 실행에서 딱 한 번만 나간다. 여기서 취소 플래그까지 세우면 그 유일한 요청의
+    // 응답조차 "취소됨" 처리되어 화면 전환이 영영 일어나지 않는다.
+    // 대신 응답이 왔을 때 startedForAttempt.current가 여전히 이 attempt인지만 확인해서,
+    // 그 사이 "다시 시도"로 더 새로운 attempt가 시작됐다면 오래된 응답은 무시한다.
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,17 +65,14 @@ export default function LoadingPage() {
         if (!res.ok) {
           throw new Error(data.error || "AI 처리 중 오류가 발생했습니다.");
         }
-        if (cancelled) return;
+        if (startedForAttempt.current !== attempt) return;
         localStorage.removeItem(PENDING_INPUT_KEY);
         router.replace(`/result/${data.draftId}`);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message);
+        if (startedForAttempt.current !== attempt) return;
+        setError(err.message);
       });
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 

@@ -23,29 +23,22 @@ const MOOD_OPTIONS = [
   "건강하고 깨끗한 느낌",
 ];
 
-const REQUIRED_FIELDS = [
-  "region_industry",
-  "contact",
-  "main_product_copy",
-  "strengths",
-  "color_theme",
-  "mood",
-  "extra_requests",
-  "email",
-];
+const STEP_LABELS = ["기본 정보", "매장 자랑거리", "디자인 스타일"];
+
+const REQUIRED_FIELDS_BY_STEP = {
+  1: ["store_name", "region_industry", "email"],
+  2: ["main_product_copy", "strengths"],
+  3: ["color_theme", "mood"],
+};
 
 const INITIAL_FORM = {
+  store_name: "",
   region_industry: "",
-  contact: "",
-  sns_url: "",
-  business_number: "",
+  email: "",
   main_product_copy: "",
   strengths: "",
-  benchmark_url: "",
   color_theme: "",
   mood: "",
-  extra_requests: "",
-  email: "",
 };
 
 const DRAFT_STORAGE_KEY = "handa_input_draft";
@@ -53,11 +46,14 @@ const PENDING_INPUT_KEY = "handa_pending_input";
 
 export default function InputPage() {
   const router = useRouter();
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
-  const [photos, setPhotos] = useState([]);
+  const [photos, setPhotos] = useState([]); // [{ name, url }]
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const [errors, setErrors] = useState({});
 
-  // 필수 입력값 누락 흐름: 새로고침 후에도 입력값 유지 (TEST_CHECKLIST.md)
+  // 필수 입력값 누락 흐름: 새로고침 후에도 입력값·단계 유지 (TEST_CHECKLIST.md)
   useEffect(() => {
     const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (saved) {
@@ -65,6 +61,7 @@ export default function InputPage() {
         const parsed = JSON.parse(saved);
         setForm((prev) => ({ ...prev, ...parsed.form }));
         setPhotos(parsed.photos || []);
+        setStep(parsed.step || 1);
       } catch {
         // 손상된 임시 저장값은 무시한다
       }
@@ -72,40 +69,70 @@ export default function InputPage() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ form, photos }));
-  }, [form, photos]);
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ form, photos, step }));
+  }, [form, photos, step]);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handlePhotoChange(e) {
+  // 선택 즉시 Supabase Storage로 업로드해서 실제 URL을 받아온다 (API_CONTRACT.md API 5).
+  async function handlePhotoChange(e) {
     const files = Array.from(e.target.files || []).slice(0, 3);
-    setPhotos(files.map((f) => f.name));
+    e.target.value = "";
+    if (files.length === 0) return;
+
+    setPhotoError("");
+    setUploadingPhotos(true);
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("photos", file));
+
+      const res = await fetch("/api/upload-photos", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "사진 업로드에 실패했습니다.");
+      }
+      setPhotos(files.map((file, i) => ({ name: file.name, url: data.urls[i] })));
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setUploadingPhotos(false);
+    }
   }
 
-  function validate() {
+  function validateStep(targetStep) {
     const next = {};
-    for (const field of REQUIRED_FIELDS) {
+    for (const field of REQUIRED_FIELDS_BY_STEP[targetStep]) {
       if (!form[field] || !String(form[field]).trim()) {
         next[field] = "필수 입력 항목입니다.";
       }
     }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (targetStep === 1 && form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       next.email = "올바른 이메일 형식이 아닙니다.";
     }
     return next;
   }
 
+  function goNext() {
+    const validationErrors = validateStep(step);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+    setStep((s) => Math.min(s + 1, 3));
+  }
+
+  function goBack() {
+    setErrors({});
+    setStep((s) => Math.max(s - 1, 1));
+  }
+
   function handleSubmit(e) {
     e.preventDefault();
-    const validationErrors = validate();
+    const validationErrors = validateStep(3);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(validationErrors).length > 0) return;
 
-    const payload = { ...form, image_names: photos };
+    const payload = { ...form, image_urls: photos.map((p) => p.url) };
     localStorage.setItem(PENDING_INPUT_KEY, JSON.stringify(payload));
     localStorage.removeItem(DRAFT_STORAGE_KEY);
     router.push("/loading");
@@ -115,11 +142,11 @@ export default function InputPage() {
     <section className="page input-page">
       <div className="step-progress">
         <div className="step-progress-label">
-          <span>1단계 / 3단계</span>
-          <span>매장 프로필</span>
+          <span>정보 입력 {step}/3</span>
+          <span>{STEP_LABELS[step - 1]}</span>
         </div>
         <div className="step-progress-track">
-          <div className="step-progress-fill" style={{ width: "33%" }} />
+          <div className="step-progress-fill" style={{ width: `${(step / 3) * 100}%` }} />
         </div>
       </div>
 
@@ -129,126 +156,141 @@ export default function InputPage() {
       </p>
 
       <form onSubmit={handleSubmit} noValidate>
-        <label>
-          지역/업종/분야(세분화) <span className="required-mark">*</span>
-          <input
-            value={form.region_industry}
-            onChange={(e) => update("region_industry", e.target.value)}
-            placeholder="예: 서울 / 카페 / 디저트카페"
-          />
-          {errors.region_industry && <span className="field-error">{errors.region_industry}</span>}
-        </label>
-
-        <label>
-          연락처 <span className="required-mark">*</span>
-          <input
-            value={form.contact}
-            onChange={(e) => update("contact", e.target.value)}
-            placeholder="예: 010-1234-5678"
-          />
-          {errors.contact && <span className="field-error">{errors.contact}</span>}
-        </label>
-
-        <label>
-          SNS 주소 (선택)
-          <input value={form.sns_url} onChange={(e) => update("sns_url", e.target.value)} />
-        </label>
-
-        <label>
-          사업자등록번호 (선택)
-          <input
-            value={form.business_number}
-            onChange={(e) => update("business_number", e.target.value)}
-            maxLength={100}
-          />
-        </label>
-
-        <label>
-          강조 제품 및 메인 문구 <span className="required-mark">*</span>
-          <textarea
-            value={form.main_product_copy}
-            onChange={(e) => update("main_product_copy", e.target.value)}
-            maxLength={200}
-          />
-          {errors.main_product_copy && <span className="field-error">{errors.main_product_copy}</span>}
-        </label>
-
-        <label>
-          회사/매장 장점 <span className="required-mark">*</span>
-          <textarea value={form.strengths} onChange={(e) => update("strengths", e.target.value)} />
-          {errors.strengths && <span className="field-error">{errors.strengths}</span>}
-        </label>
-
-        <label>
-          벤치마킹 사이트 (선택)
-          <input value={form.benchmark_url} onChange={(e) => update("benchmark_url", e.target.value)} />
-        </label>
-
-        <fieldset>
-          <legend>색상 조합 <span className="required-mark">*</span></legend>
-          {COLOR_OPTIONS.map((opt) => (
-            <label key={opt.value} className="radio-option">
+        {step === 1 && (
+          <>
+            <label>
+              업체명 <span className="required-mark">*</span>
               <input
-                type="radio"
-                name="color_theme"
-                value={opt.value}
-                checked={form.color_theme === opt.value}
-                onChange={(e) => update("color_theme", e.target.value)}
+                value={form.store_name}
+                onChange={(e) => update("store_name", e.target.value)}
+                placeholder="예: 모던바이츠"
               />
-              {opt.label}
+              {errors.store_name && <span className="field-error">{errors.store_name}</span>}
             </label>
-          ))}
-          {errors.color_theme && <span className="field-error">{errors.color_theme}</span>}
-        </fieldset>
 
-        <fieldset>
-          <legend>홈페이지 분위기 <span className="required-mark">*</span></legend>
-          {MOOD_OPTIONS.map((opt) => (
-            <label key={opt} className="radio-option">
+            <label>
+              지역/업종 <span className="required-mark">*</span>
               <input
-                type="radio"
-                name="mood"
-                value={opt}
-                checked={form.mood === opt}
-                onChange={(e) => update("mood", e.target.value)}
+                value={form.region_industry}
+                onChange={(e) => update("region_industry", e.target.value)}
+                placeholder="예: 서울 / 카페"
               />
-              {opt}
+              {errors.region_industry && <span className="field-error">{errors.region_industry}</span>}
             </label>
-          ))}
-          {errors.mood && <span className="field-error">{errors.mood}</span>}
-        </fieldset>
 
-        <label>
-          추가 요구사항 <span className="required-mark">*</span>
-          <textarea value={form.extra_requests} onChange={(e) => update("extra_requests", e.target.value)} />
-          {errors.extra_requests && <span className="field-error">{errors.extra_requests}</span>}
-        </label>
+            <label>
+              이메일 주소 (시안 수신용) <span className="required-mark">*</span>
+              <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+              {errors.email && <span className="field-error">{errors.email}</span>}
+            </label>
 
-        <label>
-          이메일 주소 (시안 수신용) <span className="required-mark">*</span>
-          <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-          {errors.email && <span className="field-error">{errors.email}</span>}
-        </label>
-
-        <label>매장 사진 업로드 (1~3장, 선택)</label>
-        <label className="photo-upload-box">
-          <input type="file" accept="image/*" multiple onChange={handlePhotoChange} />
-          <span className="photo-upload-icon">
-            <Icon name="add_a_photo" />
-          </span>
-          <span>사진을 추가하려면 탭하세요</span>
-        </label>
-        {photos.length > 0 && (
-          <ul className="photo-preview">
-            {photos.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ul>
+            <button type="button" className="cta submit-fixed" onClick={goNext}>
+              다음
+            </button>
+          </>
         )}
 
-        <button type="submit" className="cta submit-fixed">
-          AI 시안 만들기
-        </button>
+        {step === 2 && (
+          <>
+            <label>
+              강조 제품 및 메인 문구 <span className="required-mark">*</span>
+              <textarea
+                value={form.main_product_copy}
+                onChange={(e) => update("main_product_copy", e.target.value)}
+                maxLength={200}
+              />
+              {errors.main_product_copy && <span className="field-error">{errors.main_product_copy}</span>}
+            </label>
+
+            <label>
+              회사/매장 장점 <span className="required-mark">*</span>
+              <textarea value={form.strengths} onChange={(e) => update("strengths", e.target.value)} />
+              {errors.strengths && <span className="field-error">{errors.strengths}</span>}
+            </label>
+
+            <label>매장 사진 업로드 (1~3장, 선택)</label>
+            <label className="photo-upload-box">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handlePhotoChange}
+                disabled={uploadingPhotos}
+              />
+              <span className="photo-upload-icon">
+                <Icon name="add_a_photo" />
+              </span>
+              <span>{uploadingPhotos ? "업로드 중..." : "사진을 추가하려면 탭하세요"}</span>
+            </label>
+            {photoError && <span className="field-error">{photoError}</span>}
+            {photos.length > 0 && (
+              <ul className="photo-preview">
+                {photos.map((p) => (
+                  <li key={p.url}>
+                    <img src={p.url} alt={p.name} className="photo-thumb" />
+                    {p.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="step-nav-row">
+              <button type="button" className="btn-secondary" onClick={goBack}>
+                이전
+              </button>
+              <button type="button" className="cta submit-fixed" onClick={goNext}>
+                다음
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <fieldset>
+              <legend>색상 조합 <span className="required-mark">*</span></legend>
+              {COLOR_OPTIONS.map((opt) => (
+                <label key={opt.value} className="radio-option">
+                  <input
+                    type="radio"
+                    name="color_theme"
+                    value={opt.value}
+                    checked={form.color_theme === opt.value}
+                    onChange={(e) => update("color_theme", e.target.value)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+              {errors.color_theme && <span className="field-error">{errors.color_theme}</span>}
+            </fieldset>
+
+            <fieldset>
+              <legend>홈페이지 분위기 <span className="required-mark">*</span></legend>
+              {MOOD_OPTIONS.map((opt) => (
+                <label key={opt} className="radio-option">
+                  <input
+                    type="radio"
+                    name="mood"
+                    value={opt}
+                    checked={form.mood === opt}
+                    onChange={(e) => update("mood", e.target.value)}
+                  />
+                  {opt}
+                </label>
+              ))}
+              {errors.mood && <span className="field-error">{errors.mood}</span>}
+            </fieldset>
+
+            <div className="step-nav-row">
+              <button type="button" className="btn-secondary" onClick={goBack}>
+                이전
+              </button>
+              <button type="submit" className="cta submit-fixed">
+                AI 시안 만들기
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </section>
   );

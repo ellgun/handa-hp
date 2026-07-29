@@ -1,9 +1,5 @@
 # ENVIRONMENT.md — 한다뚝딱 (handa. 뚝딱)
 
-> **적용 단계 안내**
-> 이번 로컬 테스트 버전은 Google 로그인·Gmail 발송을 포함한 모든 외부 API를 더미로 대체합니다.
-> 아래 환경변수는 전부 실 서비스 전환 시점부터 순서대로 등록하며, 지금은 등록하지 않습니다.
-
 비밀값을 코드와 GitHub에 절대 작성하지 않는다.
 로컬에서는 `.env.local`, 배포에서는 Vercel Environment Variables를 사용한다.
 `.env.local`은 반드시 `.gitignore`에 포함한다.
@@ -14,9 +10,9 @@
 
 | 변수명 | 용도 | 필요 시점 |
 |--------|------|----------|
-| NEXT_PUBLIC_SUPABASE_URL | Supabase 프로젝트 URL | 다음 단계 (Google 로그인 실 연동 시) |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase 익명 키 (RLS로 보호됨) | 다음 단계 (Google 로그인 실 연동 시) |
-| NEXT_PUBLIC_APP_URL | 로컬/배포 앱 주소 (이메일 링크 생성에 사용) | 지금 (로컬 주소만 필요) |
+| NEXT_PUBLIC_SUPABASE_URL | Supabase 프로젝트 URL | 지금 |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase 익명 키 (RLS로 보호됨) | 지금 |
+| NEXT_PUBLIC_APP_URL | 로컬/배포 앱 주소 (이메일 링크 생성에 사용) | 지금 |
 
 NEXT_PUBLIC_ 변수는 브라우저에 노출되므로 API 시크릿·서비스 키를 절대 포함하지 않는다.
 
@@ -26,9 +22,9 @@ NEXT_PUBLIC_ 변수는 브라우저에 노출되므로 API 시크릿·서비스 
 
 | 변수명 | 용도 | 필요 시점 |
 |--------|------|----------|
-| SUPABASE_SERVICE_ROLE_KEY | 관리자 Route 전용 Supabase 서비스 키 | 다음 단계 (실 DB 도입 시) |
-| GEMINI_API_KEY | Google Gemini API 키 (AI Studio) | 다음 단계 (Gemini 실 연동 시, 현재는 더미) |
-| AGENTRIA_API_KEY | Gmail 발송용 Agentria API 키 (가칭 — 실제 변수명은 Agentria 문서 확인 후 확정) | 다음 단계 (Gmail 실 연동 시, 현재는 더미) |
+| SUPABASE_SERVICE_ROLE_KEY | 관리자 Route·데이터 저장소 전용 Supabase 서비스 키 | 지금 (연동 완료) |
+| GEMINI_API_KEY | Google Gemini API 키 (AI Studio) | 지금 (연동 완료, `/api/generate`) |
+| AGENTRIA_API_KEY | Gmail 발송용 Agentria API 키 (가칭 — 실제 변수명은 Agentria 문서 확인 후 확정) | Gmail 발송 연동 구현 시 |
 
 서버 전용 값에 `NEXT_PUBLIC_` 접두사를 붙이지 않는다.
 이 값들은 서버 Route Handler(`/app/api/...`)에서만 참조한다.
@@ -49,13 +45,13 @@ NEXT_PUBLIC_APP_URL=
 # Supabase (서버 전용 — 절대 클라이언트에 노출 금지)
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Google Gemini API (서버 전용 — 다음 단계, 현재는 더미 처리)
+# Google Gemini API (서버 전용)
 GEMINI_API_KEY=
 
-# Gmail 발송 (Agentria API, 서버 전용 — 다음 단계, 현재는 더미 처리, 변수명 확인 후 확정)
+# Gmail 발송 (Agentria API, 서버 전용 — 변수명 확인 후 확정)
 AGENTRIA_API_KEY=
 
-# Stitch AI (API 공개 시 추가 — 다음 단계, 현재는 더미 처리)
+# Stitch AI (API 공개 시 추가)
 # STITCH_API_KEY=
 ```
 

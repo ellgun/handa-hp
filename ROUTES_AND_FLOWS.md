@@ -6,7 +6,7 @@
 
 | 경로 | 페이지 | 설명 |
 |------|--------|------|
-| `/login` | 01_Login | Google 로그인 (Supabase Auth, 테스트 버전은 더미 처리) |
+| `/login` | 01_Login | Google 로그인 (Supabase Auth) |
 | `/` | 02_Home | 서비스 소개, 샘플 시안, 시작하기 CTA |
 | `/input` | 03_Input | 매장 정보 입력 폼 (11개 항목 + 사진 업로드) |
 | `/loading` | 04_Loading | AI 처리 중 진행 상태 표시 |

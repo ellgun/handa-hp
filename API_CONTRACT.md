@@ -4,22 +4,15 @@
 공식 문서 확인 + Postman에서 성공한 요청만 기록합니다.
 API 키는 반드시 환경변수(.env)로 관리합니다.
 
-> **적용 단계 안내 (API별 실제/더미 처리 확정)**
-> - API 1 Gemini, API 2 Stitch AI: **더미 처리** — 실제 호출 없이 더미 텍스트·더미 HTML로 대체
-> - API 3 Google 로그인(Supabase Auth): **더미 처리** — 실제 OAuth 연동 없이 "로그인 성공" 상태만 흉내냄
-> - API 4 Supabase Database, API 5 Supabase Storage: **더미 처리** — 실 테이블·버킷 대신 DATA_MODEL.md 스키마를 흉내낸 인메모리·JSON 구조로 대체
-> - API 6 Gmail 발송(Agentria API): **더미 처리** — 실제 발송 없이 "발송 성공" 상태만 흉내냄
-> 이번 버전은 모든 외부 API를 더미로 대체합니다. 실 서비스 전환 시 API 1~6 전체를 실제 연동으로 전환합니다.
-
 ---
 
 ## API 목록
 
 | # | 이름 | 용도 | 사용 화면 |
 |---|------|------|----------|
-| 1 | Google Gemini API (AI Studio) | 운영 제안 문구 생성 + 시안 구성 프롬프트 처리 | 04_Loading → 05_Result |
-| 2 | Stitch AI | 홈페이지 시안 UI 생성 (입력값 기반 자동 디자인) | 04_Loading → 05_Result |
-| 3 | Supabase Auth (Google OAuth) | Google 로그인 / 로그아웃 (테스트 버전은 더미 처리) | 01_Login |
+| 1 | Google Gemini API (AI Studio) | 운영 제안 문구 생성 + 시안 HTML 생성 | 04_Loading → 05_Result |
+| 2 | Stitch AI | 보류 (MCP 전용·비공식) — 시안 HTML은 API 1(Gemini)로 대체 생성 | - |
+| 3 | Supabase Auth (Google OAuth) | Google 로그인 / 로그아웃 | 01_Login |
 | 4 | Supabase Database | 사용자 입력값·시안 저장 및 조회 | 03_Input, 05_Result, 06_MyPage, 07_Admin |
 | 5 | Supabase Storage | 매장 사진 업로드 및 조회 | 03_Input, 05_Result |
 | 6 | Gmail 발송 (Agentria API) | 시안 링크 이메일 발송 | 05_Result |
@@ -29,7 +22,8 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 ## API 1: Google Gemini API (AI Studio) — 운영 제안 문구 생성
 
 - 참고 문서: https://ai.google.dev/api/generate-content
-- 요청 주소: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`
+- 요청 주소: `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`
+  - `gemini-1.5-pro`, `gemini-2.5-flash` 같은 스냅샷 모델명은 2026년 기준 이미 지원 종료됐다. 항상 최신 flash 모델을 가리키는 `gemini-flash-latest` 별칭을 사용한다.
 - 방식: POST
 - 헤더:
   - `Content-Type: application/json`
@@ -40,17 +34,18 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
     {
       "parts": [
         {
-          "text": "당신은 소상공인 홈페이지 전문 카피라이터입니다.\n아래 매장 정보를 바탕으로 ①메인 헤드라인 ②소개 문구 ③CTA 버튼 텍스트 ④운영 제안 3가지를 작성해주세요.\n\n업종: {업종}\n매장명: {매장명}\n매장 소개: {매장소개}\n분위기: {분위기}\n강조할 장점: {장점}\n원하는 메인 문구: {메인문구}"
+          "text": "당신은 소상공인 홈페이지 전문 카피라이터입니다.\n아래 매장 정보를 바탕으로 ①메인 헤드라인 ②소개 문구 ③CTA 버튼 텍스트 ④운영 제안 1가지를 작성해주세요.\n\n업체명: {store_name}\n지역/업종: {region_industry}\n매장 소개: {strengths}\n분위기: {mood}\n강조할 제품/메인 문구: {main_product_copy}"
         }
       ]
     }
   ],
   "generationConfig": {
     "temperature": 0.7,
-    "maxOutputTokens": 1024
+    "maxOutputTokens": 4096
   }
 }
 ```
+- 주의: gemini-flash-latest는 응답 전에 내부 추론(thinking) 토큰을 상당히 소모한다. `maxOutputTokens`를 1024처럼 낮게 잡으면 추론에 다 쓰이고 실제 답변이 중간에 잘리는 걸 확인했다 — 4096 이상을 권장한다.
 - 성공 응답 예시:
 ```json
 {
@@ -87,18 +82,10 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 ## API 2: Stitch AI — 홈페이지 시안 UI 생성
 
 - 서비스: Google Stitch AI (https://stitch.withgoogle.com)
-- 역할: 사용자 입력값(업종, 색상, 분위기 등)을 프롬프트로 변환해 Stitch에서 시안 UI를 생성
-- 연동 방식: Stitch AI는 현재 API 직접 호출이 아닌 **프롬프트 기반 수동/자동화 연동** 방식으로 사용
-  - 1단계: Gemini가 Stitch용 UI 프롬프트 생성
-  - 2단계: Stitch에서 생성된 시안 HTML/코드 추출
-  - 3단계: 추출된 코드를 Supabase에 저장 후 결과 화면에 표시
-- 생성 프롬프트 예시:
-```
-업종: 카페 / 스타일: 모던 / 색상: 블루 / 기능: 예약, 메뉴 소개 / 매장명: 모던바이츠
-→ "Create a modern one-page website for a cafe called 모던바이츠. Blue color theme. Include reservation and menu sections."
-```
-- 화면에 표시할 데이터 위치: 생성된 HTML → 05_Result 시안 미리보기 iframe
-- 환경변수명: 해당 없음 (현재 수동 연동) — API 공개 시 `STITCH_API_KEY` 추가 예정
+- **2026-07 기준 보류·미사용**: Stitch의 프로그래밍 방식 접근은 REST가 아니라 MCP(Model Context Protocol) 전용이며(`stitch.googleapis.com/mcp`), 공개된 SDK(google-labs-code/stitch-sdk)도 "공식 지원 제품 아님"으로 명시돼 있어 확인 없이 구현하지 않았다.
+- **대체 방식**: 시안 HTML은 API 1과 동일한 Gemini API로 직접 생성한다 (Stitch도 내부적으로 Gemini를 사용하는 도구라 같은 접근). 요청/응답 형식은 API 1과 동일하며, 프롬프트만 "완성된 원페이지 홈페이지 HTML을 생성"하도록 다르게 구성한다 (`app/api/generate/route.js`의 `buildHtmlPrompt` 참고).
+- 화면에 표시할 데이터 위치: 생성된 HTML → 05_Result 시안 미리보기 iframe (`sandbox=""`로 스크립트 실행 차단)
+- 환경변수명: 해당 없음 (API 1의 `GEMINI_API_KEY` 재사용)
 
 ---
 
@@ -109,9 +96,8 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 - Google 자체 REST 엔드포인트를 앱에서 직접 호출하지 않는다 (Supabase Auth가 OAuth 교환을 대행)
 - 세션 확인: `supabase.auth.getSession()` / `supabase.auth.onAuthStateChange()`
 - 로그아웃: `supabase.auth.signOut()`
-- 테스트 버전 처리: 실제 Google OAuth 연동 없이 "로그인 성공" 상태를 더미로 흉내낸다. 실제 연동(Supabase 대시보드 Google 제공자 활성화, Google Cloud Console Client ID/Secret 발급)은 이후 단계에서 진행
-- 성공 시 확인 가능한 값(SDK 세션 객체 기준, 실 연동 시): `session.user.id`(uuid), `session.user.email` — 더미 버전에서는 고정된 더미 uid/이메일 사용
-- 로그인으로 확인된 사용자 정보(uid, 이메일)는 실 Supabase 테이블이 아닌 인메모리/JSON 더미 구조에 저장한다 (API 4 참고)
+- 성공 시 확인 가능한 값: `session.user.id`(uuid), `session.user.email`
+- 로그인으로 확인된 사용자 정보(uid, 이메일)는 Supabase `profiles` 테이블에 저장한다 (API 4 참고)
 - 화면에 표시할 데이터 위치: `session.user.email` → 06_MyPage 상단 / 로그인 실패 시 오류 메시지 표시
 - 환경변수명: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Google Client ID/Secret은 Supabase 대시보드에 등록, 앱 환경변수 아님)
 
@@ -129,12 +115,11 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 ```json
 {
   "user_id": "uuid-here",
-  "industry": "카페",
+  "input_id": "uuid-here",
   "store_name": "모던바이츠",
-  "style": "모던",
-  "color": "블루",
-  "email": "user@example.com",
+  "region_industry": "서울 / 카페",
   "html_content": "<!DOCTYPE html>...",
+  "suggestion_summary": "헤드라인 / 운영 제안",
   "email_sent": false,
   "created_at": "2026-07-27T10:00:00Z"
 }
@@ -143,9 +128,10 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 ```json
 [
   {
-    "id": 1,
+    "id": "uuid-here",
     "user_id": "uuid-here",
     "store_name": "모던바이츠",
+    "region_industry": "서울 / 카페",
     "created_at": "2026-07-27T10:00:00Z",
     "email_sent": false
   }
@@ -160,36 +146,19 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 ```
 - 화면에 표시할 데이터 위치: 06_MyPage 시안 히스토리 목록 / 07_Admin 사용자 활동 로그
 - 환경변수명: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- 테스트 버전 처리: 실 Supabase 테이블 대신 DATA_MODEL.md의 `drafts` 스키마 모양을 흉내낸 인메모리·JSON 더미 구조로 대체한다
 
 ---
 
 ## API 5: Supabase Storage — 매장 사진 업로드
 
-- 요청 주소: `{NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/store-images/{파일명}`
-- 방식: POST
-- 헤더:
-  - `apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-  - `Authorization: Bearer ${ACCESS_TOKEN}`
-  - `Content-Type: image/jpeg` (또는 image/png)
-- Body: 이미지 바이너리 (multipart/form-data)
-- 성공 응답 예시:
-```json
-{
-  "Key": "store-images/uuid-filename.jpg"
-}
-```
-- 실패 응답 예시:
-```json
-{
-  "statusCode": "413",
-  "error": "Payload Too Large",
-  "message": "The object exceeded the maximum allowed size"
-}
-```
-- 화면에 표시할 데이터 위치: 03_Input 사진 업로드 미리보기 / 생성된 시안 HTML 내 이미지 삽입
-- 환경변수명: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- 테스트 버전 처리: 실 Supabase Storage 대신 로컬 더미 저장(예: 임시 로컬 경로 또는 메모리 참조)으로 대체한다
+- 클라이언트가 Supabase Storage를 직접 호출하지 않고, 앱 서버 Route `POST /api/upload-photos`를 통해 업로드한다 (더미 로그인 계정도 동일하게 동작해야 해서 service role로 통일).
+- 앱 서버 Route: `POST /api/upload-photos`
+  - Body: `multipart/form-data`, 필드명 `photos` (최대 3장, 장당 5MB, jpeg/png/webp/gif만 허용)
+  - 성공 응답: `{ "urls": ["https://.../storage/v1/object/public/store-images/...", ...] }`
+  - 실패 응답: `{ "error": "..." }` (400/401/500)
+- 서버 내부에서는 `SUPABASE_SERVICE_ROLE_KEY`로 Storage `store-images` 버킷(공개)에 `{user_id}/{timestamp}-{random}.{ext}` 경로로 저장하고, `getPublicUrl()`로 공개 URL을 만들어 반환한다.
+- 화면에 표시할 데이터 위치: 03_Input 사진 업로드 미리보기 / 생성된 시안 HTML 내 `<img>` 삽입
+- 환경변수명: `SUPABASE_SERVICE_ROLE_KEY` (서버 전용)
 
 ---
 
@@ -198,7 +167,6 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 - Gmail 발송은 Agentria에서 만든 Gmail 어빌리티 API를 통해 요청한다 (claude.md 9조 기준)
 - 앱 내부 서버 Route가 Agentria API를 호출하며, 브라우저에서 Agentria 비밀키를 직접 호출하지 않는다
 - 요청 주소·인증 헤더·Body 형식: **아직 확인되지 않음** — Agentria 공식 문서 또는 Postman 테스트로 성공 사례를 확인한 뒤 이 항목에 기재한다 (추측 기재 금지)
-- 테스트 버전 처리: 실제 발송 없이 "발송 성공" 상태를 더미로 흉내낸다. 실제 Agentria 연동은 이후 단계에서 스펙 확인 후 진행
 - 이메일 발송 로그에는 본문 전체가 아닌 다음만 저장: user_id, 관련 데이터 ID, 발송 상태, HTTP 상태 코드, Agentria 요청/메시지 ID(있는 경우), 짧은 오류 코드, 발송 시각
 - 화면에 표시할 데이터 위치: 05_Result 이메일 발송 성공/실패 안내 메시지
 - 환경변수명: 확인 후 기재 (가칭 `AGENTRIA_API_KEY` — 실제 명칭은 Agentria 문서 확인 필요)

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "../../../lib/dummyAuth";
-import { getDraftById } from "../../../lib/dummyStore";
+import { getDraftById } from "../../../lib/dataStore";
 import ResultView from "./ResultView";
 
 export default async function ResultPage({ params }) {
@@ -10,7 +10,7 @@ export default async function ResultPage({ params }) {
     redirect("/login");
   }
 
-  const draft = getDraftById(draftId);
+  const draft = await getDraftById(draftId);
   if (!draft || draft.user_id !== session.uid) {
     redirect("/mypage");
   }

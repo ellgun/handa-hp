@@ -1,7 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { getSession } from "../lib/dummyAuth";
-import { getProfileById } from "../lib/dummyStore";
+import { getProfileById } from "../lib/dataStore";
 import BottomNav from "./BottomNav";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const session = await getSession();
-  const profile = session ? getProfileById(session.uid) : null;
+  const profile = session ? await getProfileById(session.uid) : null;
   const isAdmin = profile?.role === "admin";
 
   return (
