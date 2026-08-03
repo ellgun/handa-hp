@@ -2,18 +2,10 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // ROUTES_AND_FLOWS.md 보호 규칙: 비로그인 사용자는 /input, /result, /mypage, /admin 접근 시
-// /login으로 리디렉션한다. 관리자 role 검사는 fs 접근이 필요해 각 페이지(Server Component)에서 수행한다.
-// 이메일/비밀번호 더미 로그인, 관리자 테스트 로그인은 더미 쿠키를 그대로 사용하고,
-// Google 로그인만 실제 Supabase 세션을 사용하므로 두 가지를 모두 확인한다.
-
-const SESSION_COOKIE = "handa_dummy_session";
+// /login으로 리디렉션한다. 관리자 role 검사는 DB 접근이 필요해 각 페이지(Server Component)에서
+// 수행한다. 로그인(Google, 이메일/비밀번호) 모두 실제 Supabase 세션을 쓰므로 이 하나만 확인한다.
 
 export async function middleware(request) {
-  const dummySession = request.cookies.get(SESSION_COOKIE)?.value;
-  if (dummySession) {
-    return NextResponse.next();
-  }
-
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

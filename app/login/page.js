@@ -1,6 +1,18 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSession } from "../../lib/dummyAuth";
 import Icon from "../Icon";
+
+const ERROR_MESSAGES = {
+  missing_fields: "이메일과 비밀번호를 모두 입력해주세요.",
+  invalid_credentials: "이메일 또는 비밀번호가 올바르지 않습니다.",
+  google_login_failed: "Google 로그인에 실패했습니다. 다시 시도해주세요.",
+};
+
+const NOTICE_MESSAGES = {
+  check_email: "가입 확인 이메일을 보냈습니다. 이메일함을 확인한 뒤 로그인해주세요.",
+  signed_up: "회원가입이 완료됐습니다. 로그인해주세요.",
+};
 
 function GoogleIcon() {
   return (
@@ -25,11 +37,15 @@ function GoogleIcon() {
   );
 }
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }) {
   const session = await getSession();
   if (session) {
     redirect("/");
   }
+
+  const params = await searchParams;
+  const errorMessage = ERROR_MESSAGES[params?.error] || null;
+  const noticeMessage = NOTICE_MESSAGES[params?.notice] || null;
 
   return (
     <section className="page login-page">
@@ -40,16 +56,23 @@ export default async function LoginPage() {
         <h1>안녕하세요</h1>
         <p className="subtitle">계정에 로그인하세요</p>
 
-        {/* 이메일/비밀번호 입력은 시각 요소만 제공하며, 제출 시 실제 인증 검사 없이
-            더미 세션이 부여된다. Google 로그인(/api/auth/google)은 별도로 실제 Supabase Auth를 사용한다. */}
+        {noticeMessage && <p className="field-error" style={{ color: "var(--brand)" }}>{noticeMessage}</p>}
+        {errorMessage && <p className="field-error">{errorMessage}</p>}
+
         <form action="/api/auth/login" method="post">
           <div className="pill-input">
             <Icon name="person" />
-            <input type="text" name="email_display" placeholder="이메일" autoComplete="off" />
+            <input type="email" name="email" placeholder="이메일" autoComplete="email" required />
           </div>
           <div className="pill-input">
             <Icon name="lock" />
-            <input type="password" name="password_display" placeholder="비밀번호" autoComplete="off" />
+            <input
+              type="password"
+              name="password"
+              placeholder="비밀번호"
+              autoComplete="current-password"
+              required
+            />
             <Icon name="visibility" />
           </div>
           <div className="forgot-row">
@@ -72,13 +95,8 @@ export default async function LoginPage() {
           </button>
         </form>
 
-        <p className="dummy-note">
-          Google 계정으로 로그인해주세요. 이메일/비밀번호 입력은 실제 인증 없이 임시 계정으로
-          로그인되는 테스트용 기능입니다.
-        </p>
-
         <p className="signup-row">
-          계정이 없으신가요? <strong>회원가입</strong>
+          계정이 없으신가요? <Link href="/signup"><strong>회원가입</strong></Link>
         </p>
         <p className="privacy-note">로그인 시 이메일 등 최소한의 정보만 사용합니다.</p>
       </div>

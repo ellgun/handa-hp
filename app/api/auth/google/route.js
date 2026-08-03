@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "../../../../lib/supabaseServer";
 
 // Google 로그인 버튼 전용 엔드포인트.
-// 기존 /api/auth/login(이메일/비밀번호 더미, 관리자 테스트 로그인)은 건드리지 않는다.
+// /api/auth/login(이메일/비밀번호)은 별도 라우트이며, 둘 다 실제 Supabase Auth 세션을 발급한다.
 export async function POST(request) {
   const supabase = await createSupabaseServerClient();
   const origin = new URL(request.url).origin;
