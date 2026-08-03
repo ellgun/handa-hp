@@ -1,6 +1,24 @@
 /* "Vivid Clarity" 디자인 시스템 (Claude Design 목업 handa/project 기반) */
-/* Do Hyeon 단일 굵기(400) 폰트, Material Symbols Outlined 아이콘, 알약형 컴포넌트 */
+/* Tmoney RoundWind 2단계 굵기(400/800) 폰트, Material Symbols Outlined 아이콘, 알약형 컴포넌트 */
 /* UI_REFERENCE.md 원칙(큰 글자·큰 버튼·과한 애니메이션 금지)은 유지 */
+
+@font-face {
+  font-family: "TmoneyRoundWind";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/TmoneyRoundWind@main/TmoneyRoundWindRegular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TmoneyRoundWind";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/TmoneyRoundWind@main/TmoneyRoundWindExtraBold.woff2")
+    format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --brand: #fe6500;
@@ -30,7 +48,7 @@
 
 body {
   margin: 0;
-  font-family: "Do Hyeon", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: "TmoneyRoundWind", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 1.6;
@@ -130,7 +148,7 @@ main.with-bottom-nav {
 
 h1 {
   font-size: 26px;
-  font-weight: 400;
+  font-weight: 800;
   color: var(--navy);
 }
 
@@ -225,6 +243,7 @@ button,
   min-height: 48px;
   padding: 12px 28px;
   font-family: inherit;
+  font-weight: 800;
   font-size: 16px;
   color: #fff;
   background: var(--brand);
@@ -553,6 +572,7 @@ td {
 
 .login-submit-row .login-label {
   font-size: 26px;
+  font-weight: 800;
   color: var(--navy);
 }
 
