@@ -22,9 +22,16 @@ export default async function SignupPage({ searchParams }) {
 
   return (
     <section className="page login-page">
-      <div className="login-blob blob-top" aria-hidden="true" />
-      <div className="login-blob blob-bottom" aria-hidden="true" />
+      <div className="login-hero">
+        <Link href="/" className="login-back-btn" aria-label="홈으로">
+          <Icon name="arrow_back" />
+        </Link>
+        <div className="login-logo-badge">
+          <img src="/logo.png" alt="handa.뚝딱" />
+        </div>
+      </div>
 
+      <div className="login-sheet">
       <div className="login-content">
         <h1>회원가입</h1>
         <p className="subtitle">이메일과 비밀번호로 계정을 만드세요</p>
@@ -70,6 +77,7 @@ export default async function SignupPage({ searchParams }) {
           이미 계정이 있으신가요? <Link href="/login"><strong>로그인</strong></Link>
         </p>
         <p className="privacy-note">가입 시 이메일 등 최소한의 정보만 사용합니다.</p>
+      </div>
       </div>
     </section>
   );

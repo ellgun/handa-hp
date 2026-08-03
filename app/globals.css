@@ -40,6 +40,14 @@
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04);
   --shadow-pill: 0 4px 20px rgba(0, 0, 0, 0.06);
   --shadow-cta: 0 10px 24px rgba(254, 101, 0, 0.28);
+
+  /* 로그인/회원가입/시작화면 전용 팔레트 (보라+골드+크림) */
+  --violet: #5b3fe0;
+  --violet-dark: #3b23a8;
+  --gold: #fdb623;
+  --gold-dark: #e39a00;
+  --cream: #fbf3e3;
+  --shadow-gold: 0 10px 20px rgba(253, 182, 35, 0.45);
 }
 
 * {
@@ -88,14 +96,12 @@ body {
   display: flex;
   align-items: center;
   text-decoration: none;
-  gap: 2px;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  color: var(--navy);
 }
 
-.site-header .logo .logo-dot {
-  color: var(--brand);
+.site-header .logo img {
+  height: 28px;
+  width: auto;
+  display: block;
 }
 
 .site-header nav a,
@@ -470,42 +476,123 @@ td {
   justify-content: center;
 }
 
-/* 로그인 화면 그라데이션 블롭 장식 */
+/* 로그인/회원가입 화면: 보라 히어로 + 흰색 시트 */
 .login-page {
   position: relative;
-  overflow: hidden;
   min-height: calc(100vh - 70px);
   margin: -32px -20px;
-  padding: 56px 24px 32px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.login-blob {
-  position: absolute;
+.login-hero {
+  background: linear-gradient(160deg, var(--violet) 0%, var(--violet-dark) 100%);
+  padding: 32px 24px 64px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.login-back-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--gold);
   border-radius: 50%;
-  opacity: 0.9;
-  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy);
+  text-decoration: none;
 }
 
-.login-blob.blob-top {
-  top: -160px;
-  right: -140px;
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(circle at 30% 30%, #ffb74d, var(--brand));
+.login-logo-badge {
+  width: 120px;
+  height: 120px;
+  background: #ffffff;
+  border-radius: 50%;
+  margin: 8px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
-.login-blob.blob-bottom {
-  bottom: -180px;
-  left: -160px;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle at 70% 70%, #7a7de0, var(--navy));
+.login-logo-badge img {
+  width: 82px;
+}
+
+.login-sheet {
+  background: var(--surface);
+  border-radius: 32px 32px 0 0;
+  margin-top: -32px;
+  flex: 1;
+  padding: 36px 24px 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .login-content {
-  position: relative;
-  z-index: 1;
   text-align: center;
+}
+
+/* 시작 화면 (비로그인 첫 화면) */
+.welcome-page {
+  min-height: calc(100vh - 70px);
+  margin: -32px -20px;
+  padding: 64px 32px 48px;
+  background: linear-gradient(160deg, var(--violet) 0%, var(--violet-dark) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.welcome-page h1 {
+  color: #ffffff;
+  font-size: 32px;
+  margin: 0 0 40px;
+}
+
+.welcome-logo-badge {
+  width: 220px;
+  height: 220px;
+  background: var(--cream);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  margin-bottom: 56px;
+}
+
+.welcome-logo-badge img {
+  width: 150px;
+}
+
+.welcome-cta {
+  background: var(--gold);
+  color: var(--navy);
+  box-shadow: var(--shadow-gold);
+  width: 100%;
+  max-width: 320px;
+  margin-top: auto;
+}
+
+.welcome-cta:hover {
+  background: var(--gold-dark);
+}
+
+.welcome-login-row {
+  color: #e4defc;
+  font-size: 15px;
+  margin-top: 16px;
+}
+
+.welcome-login-row a {
+  color: var(--gold);
+  font-weight: 800;
+  text-decoration: underline;
 }
 
 .login-content h1 {
@@ -582,12 +669,12 @@ td {
   min-height: 56px;
   padding: 0;
   border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
+  background: var(--gold);
+  color: var(--navy);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-cta);
+  box-shadow: var(--shadow-gold);
 }
 
 .login-divider {
@@ -603,7 +690,7 @@ td {
 }
 
 .signup-row strong {
-  color: var(--navy);
+  color: var(--gold-dark);
   text-decoration: underline;
 }
 

@@ -11,6 +11,23 @@ const STEPS = [
 export default async function HomePage() {
   const session = await getSession();
 
+  if (!session) {
+    return (
+      <section className="page welcome-page">
+        <h1>시작해볼까요!</h1>
+        <div className="welcome-logo-badge">
+          <img src="/logo.png" alt="handa.뚝딱" />
+        </div>
+        <Link href="/signup" className="cta welcome-cta">
+          가입하기
+        </Link>
+        <p className="welcome-login-row">
+          이미 계정이 있나요? <Link href="/login">로그인</Link>
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="page home-page">
       <h1>사장님 홈페이지, 5분이면 뚝딱!</h1>
@@ -27,15 +44,9 @@ export default async function HomePage() {
         ))}
       </div>
 
-      {session ? (
-        <Link href="/input" className="cta">
-          시작하기
-        </Link>
-      ) : (
-        <Link href="/login" className="cta">
-          로그인하고 시작하기
-        </Link>
-      )}
+      <Link href="/input" className="cta">
+        시작하기
+      </Link>
     </section>
   );
 }

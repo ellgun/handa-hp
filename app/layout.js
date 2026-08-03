@@ -26,7 +26,7 @@ export default async function RootLayout({ children }) {
       <body>
         <header className="site-header">
           <Link href="/" className="logo">
-            handa<span className="logo-dot">.</span>뚝딱
+            <img src="/logo-wordmark.png" alt="handa.뚝딱" />
           </Link>
           <nav className="user-nav">
             {session ? (

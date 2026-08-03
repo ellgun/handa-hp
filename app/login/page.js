@@ -49,14 +49,21 @@ export default async function LoginPage({ searchParams }) {
 
   return (
     <section className="page login-page">
-      <div className="login-blob blob-top" aria-hidden="true" />
-      <div className="login-blob blob-bottom" aria-hidden="true" />
+      <div className="login-hero">
+        <Link href="/" className="login-back-btn" aria-label="홈으로">
+          <Icon name="arrow_back" />
+        </Link>
+        <div className="login-logo-badge">
+          <img src="/logo.png" alt="handa.뚝딱" />
+        </div>
+      </div>
 
+      <div className="login-sheet">
       <div className="login-content">
         <h1>안녕하세요</h1>
         <p className="subtitle">계정에 로그인하세요</p>
 
-        {noticeMessage && <p className="field-error" style={{ color: "var(--brand)" }}>{noticeMessage}</p>}
+        {noticeMessage && <p className="field-error" style={{ color: "var(--violet)" }}>{noticeMessage}</p>}
         {errorMessage && <p className="field-error">{errorMessage}</p>}
 
         <form action="/api/auth/login" method="post">
@@ -99,6 +106,7 @@ export default async function LoginPage({ searchParams }) {
           계정이 없으신가요? <Link href="/signup"><strong>회원가입</strong></Link>
         </p>
         <p className="privacy-note">로그인 시 이메일 등 최소한의 정보만 사용합니다.</p>
+      </div>
       </div>
     </section>
   );
