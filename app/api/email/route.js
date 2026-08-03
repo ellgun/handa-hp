@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 import { getSession } from "../../../lib/dummyAuth";
 import {
   getDraftById,
@@ -8,18 +9,16 @@ import {
   addActivityLog,
 } from "../../../lib/dataStore";
 
-// API_CONTRACT.md API 6: Resend로 시안 링크를 이메일 발송한다 (Agentria는 실제 스펙이
-// 확인되지 않아 사용자 지시로 보류, 대신 문서화된 Resend REST API를 직접 호출한다).
-// https://resend.com/docs/api-reference/emails/send-email
-
-const RESEND_URL = "https://api.resend.com/emails";
-const FROM_ADDRESS = "handa.뚝딱 <onboarding@resend.dev>";
+// API_CONTRACT.md API 6: Gmail SMTP(사용자 본인 Gmail 계정 + 앱 비밀번호)로 시안 링크를
+// 이메일 발송한다. Resend는 발신 도메인 인증 전에는 계정 소유자 본인 이메일로만 발송
+// 가능해서 실제 고객에게 발송이 막혀 있었고(도메인 구매 없이 진행하기로 함), Gmail은
+// 자체 도메인을 이미 소유하고 있어 도메인 인증 없이 임의 수신자에게 발송 가능하다.
 
 class SendError extends Error {
-  constructor(message, code, httpStatus) {
+  constructor(message, code, smtpCode) {
     super(message);
     this.code = code;
-    this.httpStatus = httpStatus;
+    this.smtpCode = smtpCode;
   }
 }
 
@@ -35,41 +34,40 @@ function buildEmailHtml({ storeName, previewUrl, suggestionSummary }) {
   );
 }
 
-async function sendViaResend({ to, storeName, previewUrl, suggestionSummary }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new SendError("RESEND_API_KEY가 설정되지 않았습니다.", "RESEND_NOT_CONFIGURED", 500);
-  }
+let cachedTransporter = null;
 
-  let res;
+function getTransporter() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) {
+    throw new SendError("GMAIL_USER/GMAIL_APP_PASSWORD가 설정되지 않았습니다.", "GMAIL_NOT_CONFIGURED", null);
+  }
+  if (!cachedTransporter) {
+    cachedTransporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+    });
+  }
+  return cachedTransporter;
+}
+
+async function sendViaGmail({ to, storeName, previewUrl, suggestionSummary }) {
+  const transporter = getTransporter();
+
+  let info;
   try {
-    res = await fetch(RESEND_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: [to],
-        subject: `${storeName} 홈페이지 시안이 완성됐어요`,
-        html: buildEmailHtml({ storeName, previewUrl, suggestionSummary }),
-      }),
+    info = await transporter.sendMail({
+      from: `"handa.뚝딱" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `${storeName} 홈페이지 시안이 완성됐어요`,
+      html: buildEmailHtml({ storeName, previewUrl, suggestionSummary }),
     });
   } catch (err) {
-    throw new SendError("Resend 요청에 실패했습니다.", "RESEND_NETWORK_ERROR", 502);
+    throw new SendError(err.message || "Gmail 발송에 실패했습니다.", "GMAIL_SEND_ERROR", err.responseCode || null);
   }
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new SendError(
-      data?.message || `Resend 요청이 실패했습니다. (${res.status})`,
-      data?.name || `RESEND_HTTP_${res.status}`,
-      res.status
-    );
-  }
-
-  return { messageId: data.id, httpStatus: res.status };
+  const smtpCode = Number.parseInt(String(info.response || "").split(" ")[0], 10);
+  return { messageId: info.messageId, smtpCode: Number.isFinite(smtpCode) ? smtpCode : null };
 }
 
 export async function POST(request) {
@@ -97,7 +95,7 @@ export async function POST(request) {
   const previewUrl = `${origin}/result/${draft.id}/preview`;
 
   try {
-    const { messageId, httpStatus } = await sendViaResend({
+    const { messageId, smtpCode } = await sendViaGmail({
       to: receiptEmail,
       storeName: draft.store_name || draft.region_industry || "매장",
       previewUrl,
@@ -109,7 +107,7 @@ export async function POST(request) {
       user_id: session.uid,
       draft_id: draft.id,
       status: "sent",
-      http_status: httpStatus,
+      http_status: smtpCode,
       provider_request_id: messageId,
     });
     await addActivityLog({
@@ -121,15 +119,15 @@ export async function POST(request) {
 
     return NextResponse.json({ status: "sent" });
   } catch (err) {
-    const code = err instanceof SendError ? err.code : "RESEND_UNKNOWN_ERROR";
-    const httpStatus = err instanceof SendError ? err.httpStatus : 500;
-    console.error("[/api/email] Resend 발송 실패:", code, err.message);
+    const code = err instanceof SendError ? err.code : "GMAIL_UNKNOWN_ERROR";
+    const smtpCode = err instanceof SendError ? err.smtpCode : null;
+    console.error("[/api/email] Gmail 발송 실패:", code, err.message);
 
     await addEmailLog({
       user_id: session.uid,
       draft_id: draft.id,
       status: "failed",
-      http_status: httpStatus,
+      http_status: smtpCode,
       error_code: code,
     });
     await addActivityLog({

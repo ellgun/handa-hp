@@ -66,7 +66,7 @@
 
 - [x] 생성된 홈페이지 시안이 미리보기로 표시됨 (`/result/[draftId]/preview`, 로그인 불필요)
 - [x] 운영 제안 문구 카드 표시
-- [x] "이메일로 받기" 버튼 클릭 시 Gmail(Resend API) 실제 발송 요청
+- [x] "이메일로 받기" 버튼 클릭 시 Gmail(Gmail SMTP) 실제 발송 요청
 - [x] 이메일 발송 성공 안내 메시지 표시 ("이메일 발송에 성공했습니다.")
 - [ ] 이메일 발송 실패 시 안내 메시지 + 재시도 버튼 표시 — 미실시
 - [ ] 발송 실패 후에도 시안이 마이페이지에 보존됨 — 미실시
@@ -123,12 +123,15 @@
 
 ---
 
-## Gmail 발송 (Resend API)
+## Gmail 발송 (Gmail SMTP)
 
-- [ ] Resend API 키가 환경변수로만 관리됨 — 오늘 재검증 안 함
-- [x] 발송 성공 시 email_delivery_logs.status = 'sent' — 오늘 발송 성공 후 관리자 이메일 로그에 "발송 성공"으로 표시됨
-- [ ] 발송 실패 시 email_delivery_logs.status = 'failed' + error_code 저장 — 과거(07-29) validation_error 기록 있음, 오늘 재현 안 함
+> **2026-08-03 Resend → Gmail SMTP 전환**: 도메인 미인증 상태의 Resend는 계정 소유자 본인 이메일로만 발송 가능해서(403 validation_error) 실제 고객(예: naver.com 주소)에게 발송이 막혀 있었음. 도메인을 구매하지 않고 해결하기 위해 `nodemailer` + Gmail SMTP(앱 비밀번호)로 교체. 직접 nodemailer 단독 테스트(250 OK) + 앱 UI 전체 플로우(로그인→결과→이메일로 받기) 양쪽 다 성공 확인, `email_delivery_logs`에 SMTP 응답 코드(250)와 메시지 ID 정상 기록됨을 확인. 테스트 계정/데이터는 검증 후 삭제.
+
+- [x] GMAIL_USER/GMAIL_APP_PASSWORD가 환경변수로만 관리됨
+- [x] 발송 성공 시 email_delivery_logs.status = 'sent' — 오늘 실제 확인(http_status=250)
+- [ ] 발송 실패 시 email_delivery_logs.status = 'failed' + error_code 저장 — 코드상 처리는 있으나 오늘 실패 케이스 재현 안 함
 - [x] 이메일 본문·제목이 DB에 저장되지 않음 — 관리자 이메일 로그에 상태/시각/오류코드만 노출 확인
+- [x] 도메인 인증 없이 임의 수신자(계정 소유자 본인이 아닌 주소)에게 발송 가능 — Resend의 근본 제약이 해결됐는지가 핵심 목적이었음
 
 ---
 

@@ -24,7 +24,8 @@ NEXT_PUBLIC_ 변수는 브라우저에 노출되므로 API 시크릿·서비스 
 |--------|------|----------|
 | SUPABASE_SERVICE_ROLE_KEY | 관리자 Route·데이터 저장소 전용 Supabase 서비스 키 | 지금 (연동 완료) |
 | GEMINI_API_KEY | Google Gemini API 키 (AI Studio) | 지금 (연동 완료, `/api/generate`) |
-| RESEND_API_KEY | Gmail 발송용 Resend API 키 (Agentria는 스펙 미확인으로 보류, 사용자 지시로 Resend 사용) | 지금 (연동 완료, `/api/email`) |
+| GMAIL_USER | Gmail 발송용 발신 계정 이메일 (Agentria/Resend 모두 보류·제한으로 사용자 지시로 Gmail SMTP 사용) | 지금 (연동 완료, `/api/email`) |
+| GMAIL_APP_PASSWORD | 위 Gmail 계정의 앱 비밀번호(2단계 인증 필요, 일반 로그인 비밀번호 아님) | 지금 (연동 완료, `/api/email`) |
 
 서버 전용 값에 `NEXT_PUBLIC_` 접두사를 붙이지 않는다.
 이 값들은 서버 Route Handler(`/app/api/...`)에서만 참조한다.
@@ -48,8 +49,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 # Google Gemini API (서버 전용)
 GEMINI_API_KEY=
 
-# Gmail 발송 (Resend API, 서버 전용)
-RESEND_API_KEY=
+# Gmail 발송 (Gmail SMTP, 서버 전용)
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
 
 # Stitch AI (API 공개 시 추가)
 # STITCH_API_KEY=
@@ -77,7 +79,7 @@ RESEND_API_KEY=
 
 - [ ] `.env.local`이 `.gitignore`에 포함되어 있음
 - [ ] GitHub 저장소에 비밀값이 커밋된 이력 없음
-- [ ] 클라이언트 코드에서 `GEMINI_API_KEY`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` 참조 없음
+- [ ] 클라이언트 코드에서 `GEMINI_API_KEY`, `GMAIL_APP_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY` 참조 없음
 - [ ] Vercel 환경변수에 실제 값 등록 완료
 - [ ] Supabase 대시보드에서 anon key와 service role key 구분 확인
 

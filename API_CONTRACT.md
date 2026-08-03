@@ -162,33 +162,16 @@ API 키는 반드시 환경변수(.env)로 관리합니다.
 
 ---
 
-## API 6: Gmail 발송 (Resend API) — 이메일 발송
+## API 6: Gmail 발송 (Gmail SMTP) — 이메일 발송
 
-- **claude.md 9조는 Agentria 사용을 명시하지만, Agentria의 실제 API 스펙(주소·인증·Body 형식)이 공개 문서/사내 문서 어디에도 확인되지 않아 사용자 지시로 보류했다.** 대신 공식 문서가 확인된 Resend REST API를 직접 사용한다.
-- 참고 문서: https://resend.com/docs/api-reference/emails/send-email
-- 요청 주소: `https://api.resend.com/emails`
-- 방식: POST
-- 헤더:
-  - `Content-Type: application/json`
-  - `Authorization: Bearer ${RESEND_API_KEY}`
-- Body:
-```json
-{
-  "from": "handa.뚝딱 <onboarding@resend.dev>",
-  "to": ["user@example.com"],
-  "subject": "{업체명} 홈페이지 시안이 완성됐어요",
-  "html": "<div>...시안 링크 포함된 HTML...</div>"
-}
-```
-- 성공 응답 예시:
-```json
-{ "id": "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" }
-```
-- 발신 주소는 도메인 인증 전까지 Resend 기본 테스트 주소(`onboarding@resend.dev`)를 사용한다. 실제 도메인 인증 후 발신 주소만 교체하면 된다.
-- 앱 내부 서버 Route(`/api/email`)가 Resend를 호출하며, 브라우저에서 API 키를 직접 호출하지 않는다.
-- 이메일 발송 로그에는 본문 전체가 아닌 다음만 저장: user_id, 관련 데이터 ID, 발송 상태, HTTP 상태 코드, Resend 메시지 ID(`id`, 있는 경우), 짧은 오류 코드, 발송 시각
+- **claude.md 9조는 Agentria 사용을 명시하지만, Agentria의 실제 API 스펙(주소·인증·Body 형식)이 공개 문서/사내 문서 어디에도 확인되지 않아 사용자 지시로 보류했다.** 처음엔 Resend REST API로 전환했으나, 발신 도메인 인증 전에는 Resend 계정 소유자 본인 이메일로만 발송 가능해서(테스트 모드 제한, `403 validation_error`) 실제 고객에게 발송이 막혀 있었다. 도메인을 새로 구매하지 않고 해결하기 위해, 사용자 소유 Gmail 계정 + 앱 비밀번호로 발송하는 **Gmail SMTP(nodemailer)** 방식으로 다시 전환했다. Gmail은 이미 자체 도메인을 소유하고 있어 도메인 인증 없이 임의 수신자에게 발송 가능하다.
+- 참고 문서: https://nodemailer.com/ (Gmail 서비스 프리셋 사용, `nodemailer.createTransport({ service: "gmail", auth: { user, pass } })`)
+- 발신: `GMAIL_USER` 계정에서 SMTP(`smtp.gmail.com`)로 발송. 인증은 Google 계정 앱 비밀번호(`GMAIL_APP_PASSWORD`, 2단계 인증 필요)를 사용하며 일반 로그인 비밀번호가 아니다.
+- 성공 시 SMTP 응답 코드(`250` 등)를 `email_delivery_logs.http_status`에 저장하고, 메시지 ID를 `provider_request_id`에 저장한다.
+- 앱 내부 서버 Route(`/api/email`)가 Gmail SMTP를 호출하며, 브라우저에서 앱 비밀번호를 직접 다루지 않는다.
+- 이메일 발송 로그에는 본문 전체가 아닌 다음만 저장: user_id, 관련 데이터 ID, 발송 상태, SMTP 응답 코드, 메시지 ID(있는 경우), 짧은 오류 코드, 발송 시각
 - 화면에 표시할 데이터 위치: 05_Result 이메일 발송 성공/실패 안내 메시지
-- 환경변수명: `RESEND_API_KEY`
+- 환경변수명: `GMAIL_USER`, `GMAIL_APP_PASSWORD`
 
 ---
 
@@ -205,8 +188,9 @@ GEMINI_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
-# Gmail 발송 (Resend API)
-RESEND_API_KEY=
+# Gmail 발송 (Gmail SMTP)
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
 
 # 앱 설정
 NEXT_PUBLIC_APP_URL=

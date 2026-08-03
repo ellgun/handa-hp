@@ -127,7 +127,7 @@
 | `email_send_succeeded` | 이메일 발송 성공 |
 | `email_send_failed` | 이메일 발송 실패 |
 | `admin_view` | 관리자 페이지 조회 |
-| `api_failed` | 외부 API(Gemini/Stitch/Resend) 실패 |
+| `api_failed` | 외부 API(Gemini/Stitch/Gmail) 실패 |
 
 
 
