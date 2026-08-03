@@ -40,10 +40,9 @@ export default async function LoginPage() {
         <h1>안녕하세요</h1>
         <p className="subtitle">계정에 로그인하세요</p>
 
-        {/* 더미 버전: 이메일/비밀번호 입력은 시각 요소만 제공하며, 제출 시 실제 인증 검사 없이
-            Google 로그인과 동일한 더미 로그인 처리로 연결된다 */}
+        {/* 이메일/비밀번호 입력은 시각 요소만 제공하며, 제출 시 실제 인증 검사 없이
+            더미 세션이 부여된다. Google 로그인(/api/auth/google)은 별도로 실제 Supabase Auth를 사용한다. */}
         <form action="/api/auth/login" method="post">
-          <input type="hidden" name="role" value="user" />
           <div className="pill-input">
             <Icon name="person" />
             <input type="text" name="email_display" placeholder="이메일" autoComplete="off" />
@@ -74,16 +73,9 @@ export default async function LoginPage() {
         </form>
 
         <p className="dummy-note">
-          이 버전은 로컬 테스트용입니다. 이메일/비밀번호·Google 버튼 모두 실제 인증 없이 더미
-          로그인 상태가 부여됩니다. 실제 인증 연동은 이후 단계에서 진행됩니다.
+          Google 계정으로 로그인해주세요. 이메일/비밀번호 입력은 실제 인증 없이 임시 계정으로
+          로그인되는 테스트용 기능입니다.
         </p>
-
-        <form action="/api/auth/login" method="post">
-          <input type="hidden" name="role" value="admin" />
-          <button type="submit" className="btn-admin-test">
-            (테스트용) 관리자로 로그인
-          </button>
-        </form>
 
         <p className="signup-row">
           계정이 없으신가요? <strong>회원가입</strong>

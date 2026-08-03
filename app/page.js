@@ -36,10 +36,6 @@ export default async function HomePage() {
           로그인하고 시작하기
         </Link>
       )}
-
-      <p className="dummy-note">
-        이 버전은 로컬 테스트 버전입니다. 로그인·AI 생성·이메일 발송은 모두 더미로 동작합니다.
-      </p>
     </section>
   );
 }
