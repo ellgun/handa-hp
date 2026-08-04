@@ -6,11 +6,16 @@ import { ensureProfile, addActivityLog } from "../../../lib/dataStore";
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const next = searchParams.get("next");
 
   if (code) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
+      if (next === "/reset-password") {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+
       await ensureProfile(data.user.id, data.user.email);
       await addActivityLog({
         user_id: data.user.id,
@@ -21,6 +26,12 @@ export async function GET(request) {
       });
       return NextResponse.redirect(`${origin}/`);
     }
+  }
+
+  if (next === "/reset-password") {
+    const forgotUrl = new URL("/forgot-password", origin);
+    forgotUrl.searchParams.set("error", "reset_link_invalid");
+    return NextResponse.redirect(forgotUrl);
   }
 
   const loginUrl = new URL("/login", origin);

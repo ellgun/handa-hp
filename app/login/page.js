@@ -12,6 +12,8 @@ const ERROR_MESSAGES = {
 const NOTICE_MESSAGES = {
   check_email: "가입 확인 이메일을 보냈습니다. 이메일함을 확인한 뒤 로그인해주세요.",
   signed_up: "회원가입이 완료됐습니다. 로그인해주세요.",
+  reset_email_sent: "비밀번호 재설정 링크를 이메일로 보냈습니다. 이메일함을 확인해주세요.",
+  password_reset_done: "비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요.",
 };
 
 function GoogleIcon() {
@@ -83,7 +85,7 @@ export default async function LoginPage({ searchParams }) {
             <Icon name="visibility" />
           </div>
           <div className="forgot-row">
-            <span>비밀번호를 잊으셨나요?</span>
+            <Link href="/forgot-password">비밀번호를 잊으셨나요?</Link>
           </div>
           <div className="login-submit-row">
             <span className="login-label">로그인</span>
